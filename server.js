@@ -2,6 +2,7 @@ const express = require("express");
 const mongoose = require("mongoose");
 const bodyParser = require("body-parser");
 const passport = require("passport");
+const path = require("path");
 const users = require("./routes/api/users");
 const course = require("./routes/api/course");
 const category = require("./routes/api/category");
@@ -35,11 +36,14 @@ mongoose
   .then(() => console.log("MongoDB connected"))
   .catch(err => console.log(err));
 
-app.get("/", (req, res) => res.send("Hello World"));
-
-//Use routes
+// Enable CORS
 app.use(cors());
-app.options("*", cors()); 
+app.options("*", cors());
+
+// Serve static files from React build
+app.use(express.static(path.join(__dirname, 'client/public')));
+
+// API routes
 app.use(users);
 app.use(course);
 app.use(category);
@@ -47,6 +51,20 @@ app.use(lecture);
 app.use(enroll);
 app.use(role);
 app.use("/api/profile", profile);
+
+// Home route
+app.get("/", (req, res) => {
+  res.sendFile(path.join(__dirname, 'client/public/index.html'));
+});
+
+// Catch-all handler for client routes - send index.html for all non-API routes
+app.get('*', (req, res) => {
+  if (!req.path.startsWith('/api')) {
+    res.sendFile(path.join(__dirname, 'client/public/index.html'));
+  } else {
+    res.status(404).json({ error: 'API route not found' });
+  }
+});
 
 const port = process.env.PORT || 5000;
 
