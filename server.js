@@ -40,10 +40,7 @@ mongoose
 app.use(cors());
 app.options("*", cors());
 
-// Serve static files from React build
-app.use(express.static(path.join(__dirname, 'client/public')));
-
-// API routes
+// API routes - must come BEFORE static files
 app.use(users);
 app.use(course);
 app.use(category);
@@ -52,13 +49,17 @@ app.use(enroll);
 app.use(role);
 app.use("/api/profile", profile);
 
+// Serve static files from React build
+app.use(express.static(path.join(__dirname, 'client/public')));
+
 // Home route
 app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, 'client/public/index.html'));
 });
 
-// Catch-all handler for client routes - send index.html for all non-API routes
-app.get('*', (req, res) => {
+// Catch-all handler - must come LAST - serves index.html for all non-API routes
+app.use((req, res) => {
+  // If it's not an API route, serve index.html (SPA behavior)
   if (!req.path.startsWith('/api')) {
     res.sendFile(path.join(__dirname, 'client/public/index.html'));
   } else {
